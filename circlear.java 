@@ -1,0 +1,24 @@
+
+// Define Class Circle
+
+class Circle {
+    double radius;
+
+    Circle(double r) {
+        radius = r;
+    }
+
+    double getArea() {
+        return 3.14 * radius * radius;
+    }
+
+    double getCircumference() {
+        return 2 * 3.14 * radius;
+    }
+
+    public static void main(String[] args) {
+        Circle c = new Circle(5);
+        System.out.println("Area: " + c.getArea());
+        System.out.println("Circumference: " + c.getCircumference());
+    }
+}
