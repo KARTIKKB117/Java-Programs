@@ -1,0 +1,100 @@
+package javaproject;
+
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
+
+class Question {
+    String question, optionA, optionB, optionC, optionD, correctAnswer;
+
+    Question(String q, String a, String b, String c, String d, String correct) {
+        question = q;
+        optionA = a;
+        optionB = b;
+        optionC = c;
+        optionD = d;
+        correctAnswer = correct.toUpperCase();
+    }
+
+    void display() {
+        System.out.println("\n" + question);
+        System.out.println("A. " + optionA);
+        System.out.println("B. " + optionB);
+        System.out.println("C. " + optionC);
+        System.out.println("D. " + optionD);
+    }
+}
+
+public class QuizzApp11 {
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        ExecutorService exec = Executors.newSingleThreadExecutor();
+        int score = 0;
+        List<String> wrongAnswers = new ArrayList<>();
+
+        Question[] quiz = {
+            new Question("What is the capital of India?", "Mumbai", "Delhi", "Chennai", "Kolkata", "B"),
+            new Question("Which language is used for Android Development?", "Swift", "Python", "Java", "Kotlin", "D"),
+            new Question("What does CPU stand for?", "Central Power Unit", "Control Processing Unit", "Central Processing Unit", "Computer Processing Unit", "C"),
+            new Question("Which one is a Java IDE?", "Photoshop", "Eclipse", "Blender", "Chrome", "B"),
+            new Question("What is 10 + 5?", "13", "15", "20", "25", "B")
+        };
+
+        System.out.println("=== Welcome to the Java Quiz ===");
+
+        for (Question q : quiz) {
+            q.display();
+            System.out.print("You have 10 seconds. Your answer (A/B/C/D): ");
+
+            Future<String> future = exec.submit(() -> br.readLine());
+            String answer = null;
+            boolean timedOut = false;
+
+            try {
+                answer = future.get(10, TimeUnit.SECONDS);
+            } catch (TimeoutException te) {
+                System.out.println("\n⏰ Time's up! Moving to next question.");
+                timedOut = true;
+                future.cancel(true);
+            } catch (Exception e) {
+                future.cancel(true);
+            }
+
+            if (!timedOut) {
+                answer = (answer != null) ? answer.trim().toUpperCase() : "";
+                if (answer.equals(q.correctAnswer)) {
+                    System.out.println("✅ Correct!");
+                    score++;
+                } else {
+                    System.out.println("❌ Wrong!");
+                    wrongAnswers.add(q.question + " [Correct: " + q.correctAnswer + "]");
+                }
+            } else {
+                wrongAnswers.add(q.question + " [Correct: " + q.correctAnswer + "]");
+            }
+        }
+
+        exec.shutdownNow();
+
+        System.out.println("\n🎯 Quiz Completed!");
+        System.out.println("Your Score: " + score + "/" + quiz.length);
+
+        if (!wrongAnswers.isEmpty()) {
+            System.out.println("\n❌ You got these questions wrong:");
+            for (String w : wrongAnswers) {
+                System.out.println("- " + w);
+            }
+        } else {
+            System.out.println("\n🎉 Perfect Score! No mistakes.");
+        }
+
+        try (FileWriter fw = new FileWriter("score.txt", true)) {
+            fw.write("Score: " + score + "/" + quiz.length + "\n");
+            System.out.println("\n📁 Score saved to score.txt");
+        } catch (IOException e) {
+            System.out.println("⚠️ Error saving score.");
+        }
+
+        br.close();
+    }
+}
